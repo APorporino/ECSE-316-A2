@@ -77,7 +77,11 @@ def naive_dft_k_precomputed(input_array, k):
     X = 0
     for n in range(N):
         xn = input_array[n]
-        a = np.power(coeff_array[n], k)
+        if (N < 16):
+            arg = -1j * 2 * math.pi * k * n / N
+            a = np.exp(arg)
+        else:
+            a = np.power(coeff_array[n], k)
         X += xn * a
     return X
 
@@ -155,9 +159,13 @@ def main():
 
 
 if __name__ == "__main__":
-    input_array = np.array([[1, 2, 3], [2, 2, 2], [3, 4, 5]])
-    a2 = naive_2d_dft(input_array)
-    a3 = np.fft.fft2(input_array)
-    print("CORRECT output ", a3)
-    print("TY output ", a1)
-    print("MY output ", a2)
+    j = np.arange(64)
+    i = np.arange(64)
+    ii = np.arange(64)
+    jj = np.arange(64)
+
+    input_arr = np.array([np.arange(64), np.arange(64)])
+    output = np.fft.fft2(input_arr)
+    output2 = fft_2d_dft(input_arr)
+
+    print(np.allclose(output, output2))

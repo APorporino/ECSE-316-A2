@@ -3,29 +3,69 @@ import fft
 import numpy as np
 
 
-input_array_2d_index0 = np.arange(64)
-input_array_2d_index1 = np.arange(64)
-input_array_2d_index2 = np.arange(64)
-
-input_array_2d = np.array([input_array_2d_index0, input_array_2d_index1, input_array_2d_index2])
-
-
 class TestFFTProgram(unittest.TestCase):
 
-    def test1_naive_fft(self):
+    def test1_naive_dft(self):
         input_array_1d = np.array([1, 2, 3, 4])
 
         oracle = np.fft.fft(input_array_1d)
         result = fft.naive_dft(input_array_1d)
         self.assertTrue(np.allclose(oracle, result))
 
-    def test2_naive_fft(self):
+    def test2_naive_dft(self):
         input_array_1d_big = np.arange(64)
 
         oracle = np.fft.fft(input_array_1d_big)
         result = fft.naive_dft(input_array_1d_big)
         self.assertTrue(np.allclose(oracle, result))
 
+    def test1_naive_dft_2d(self):
+        input_array_2d = np.array([[1, 2, 3],[4, 5, 6], [2, 2, 2]])
+
+        oracle = np.fft.fft2(input_array_2d)
+        result = fft.naive_2d_dft(input_array_2d)
+        self.assertTrue(np.allclose(oracle, result))
+
+    def test2_naive_dft_2d(self):
+        input_array_2d = np.array([[4, 2],[4, 6], [2, 2], [1, 1], [9, 8]])
+
+        oracle = np.fft.fft2(input_array_2d)
+        result = fft.naive_2d_dft(input_array_2d)
+        self.assertTrue(np.allclose(oracle, result))
+
+    def test1_fft(self):
+        input_array_1d = np.arange(16)
+
+        oracle = np.fft.fft(input_array_1d)
+        result = fft.outer_fft_dft(input_array_1d)
+        self.assertTrue(np.allclose(oracle, result))
+
+    def test2_fft(self):
+        input_array_1d = np.arange(256)
+
+        oracle = np.fft.fft(input_array_1d)
+        result = fft.outer_fft_dft(input_array_1d)
+        self.assertTrue(np.allclose(oracle, result))
+
+    def test1_fft_2d(self):
+        input_array_2d_index0 = np.arange(32)
+        input_array_2d_index1 = np.arange(32)
+        input_array_2d_index2 = np.arange(32)
+
+        input_array_2d = np.array([input_array_2d_index0, input_array_2d_index1, input_array_2d_index2])
+        oracle = np.fft.fft2(input_array_2d)
+        result = fft.fft_2d_dft(input_array_2d)
+        self.assertTrue(np.allclose(oracle, result))
+
+    def test2_fft_2d(self):
+        input_array_2d_index0 = np.arange(256)
+        input_array_2d_index1 = np.arange(256)
+        input_array_2d_index2 = np.arange(256)
+
+        input_array_2d = np.array([input_array_2d_index0, input_array_2d_index1, input_array_2d_index2])
+        oracle = np.fft.fft2(input_array_2d)
+        result = fft.fft_2d_dft(input_array_2d)
+        self.assertTrue(np.allclose(oracle, result))
 
 if __name__ == '__main__':
     unittest.main()
