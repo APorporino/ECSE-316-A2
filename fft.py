@@ -8,6 +8,7 @@ import argparse
 smallest_size_array = 16
 coeff_array = [np.exp(-1j * 2 * np.pi * m / smallest_size_array) for m in range(smallest_size_array)]
 
+
 def naive_dft(input_array):
     N = input_array.size
     output_array = np.zeros(N, dtype=np.complex_)
@@ -21,22 +22,35 @@ def naive_dft(input_array):
     return np.array(output_array)
 
 
+def naive_dft_k(input_array, k):
+    N = input_array.size
+    X = 0
+    for n in range(N):
+        xn = input_array[n]
+        arg = -1j * 2 * math.pi * k * n / N
+        X += xn * np.exp(arg)
+    return X
+
+
 def naive_2d_dft(input_array):
-    M, N = input_array.shape
-    output_array = np.zeros((M, N), dtype=np.complex_)
-    for k in range(M):
-        for l in range(N):
-            Fkl = 0
-            for n in range(N):
-                Fk = 0
-                for m in range(M):
-                    fmn = input_array[m][n]
-                    arg = -1j * 2 * math.pi * k * m / M
-                    Fk += fmn * np.exp(arg)
-                arg = -1j * 2 * math.pi * l * n / N
-                Fkl += Fk * np.exp(arg)
-            output_array[k][l] = Fkl
+    R, C = input_array.shape
+    output_array = np.zeros((R, C), dtype=np.complex_)
+    for k in range(R):
+        for l in range(C):
+            output_array[k][l] = naive_2d_dft_k_l(input_array, k, l)
     return np.array(output_array)
+
+
+def naive_2d_dft_k_l(input_array, k, l):
+    R, C = input_array.shape
+    input_array_transpose = input_array.transpose()
+
+    temp = np.zeros(C, dtype=np.complex_)
+
+    for i in range(C):
+        temp[i] = naive_dft_k(input_array_transpose[i], k)
+
+    return naive_dft_k(temp, l)
 
 
 # Assuming input_array size is a power of 2
@@ -47,7 +61,8 @@ def inner_fft_dft(input_array, k):
         odd = inner_fft_dft(input_array[1::2], k)
         return even + np.exp(-1j * 2 * np.pi * k / size) * odd
     else:
-        return naive_dft_k(input_array, k)
+        return naive_dft_k_precomputed(input_array, k)
+
 
 def outer_fft_dft(input_array):
     size = input_array.size
@@ -57,38 +72,8 @@ def outer_fft_dft(input_array):
     return output_array
 
 
-def fft_constant_coefficients(size):
-    output_array = np.zeros(size, dtype=np.complex_)
-    for k in range(size):
-        arg = -1j * 2 * math.pi * k / size
-        output_array[k] = np.exp(arg)
-    return output_array
-
-
-def inverse_fft_dft():
-    pass
-
-
-def naive_2d_idft(input_array):
-    M, N = input_array.shape
-    output_array = np.zeros((M, N), dtype=np.complex_)
-    for m in range(M):
-        for n in range(N):
-            fmn = 0
-            for l in range(N):
-                fm = 0
-                for k in range(M):
-                    Fkl = input_array[k][l]
-                    arg = 1j * 2 * math.pi * k * m / M
-                    fm += Fkl * np.exp(arg)
-                arg = 1j * 2 * math.pi * l * n / N
-                fmn += fm * np.exp(arg)
-            output_array[m][m] = fmn
-    return np.array(output_array)
-
-def naive_dft_k(input_array, k):
+def naive_dft_k_precomputed(input_array, k):
     N = input_array.size
-    output_array = np.zeros(N, dtype=np.complex_)
     X = 0
     for n in range(N):
         xn = input_array[n]
@@ -97,12 +82,34 @@ def naive_dft_k(input_array, k):
     return X
 
 
-def fft_2d_dft():
+def inverse_fft_dft():
     pass
+
+
+def fft_2d_dft(input_array):
+    R, C = input_array.shape
+    output_array = np.zeros((R, C), dtype=np.complex_)
+    for k in range(R):
+        for l in range(C):
+            output_array[k][l] = fft_2d_dft_k_l(input_array, k, l)
+    return np.array(output_array)
+
+
+def fft_2d_dft_k_l(input_array, k, l):
+    R, C = input_array.shape
+    input_array_transpose = input_array.transpose()
+
+    temp = np.zeros(C, dtype=np.complex_)
+
+    for i in range(C):
+        temp[i] = inner_fft_dft(input_array_transpose[i], k)
+
+    return inner_fft_dft(temp, l)
 
 
 def inverse_fft_2d_dft():
     pass
+
 
 def main():
     parser = argparse.ArgumentParser(description='Arguments for FFT program')
@@ -146,9 +153,11 @@ def main():
     else:
         return -1
 
+
 if __name__ == "__main__":
-    input_arr = np.arange(64)
-    output = np.fft.fft(input_arr)
-    output2 = outer_fft_dft(input_arr)
-    print("CORRECT output ", output)
-    print("MY output ", output2)
+    input_array = np.array([[1, 2, 3], [2, 2, 2], [3, 4, 5]])
+    a2 = naive_2d_dft(input_array)
+    a3 = np.fft.fft2(input_array)
+    print("CORRECT output ", a3)
+    print("TY output ", a1)
+    print("MY output ", a2)
