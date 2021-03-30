@@ -6,7 +6,8 @@ import os
 import argparse
 
 smallest_size_array = 16
-coeff_array = [np.exp(-1j * 2 * np.pi * m / smallest_size_array) for m in range(smallest_size_array)]
+dft_coeff_array = [np.exp(-1j * 2 * np.pi * m / smallest_size_array) for m in range(smallest_size_array)]
+inverse_dft_coeff_array = [np.exp(1j * 2 * np.pi * k / smallest_size_array) for k in range(smallest_size_array)]
 
 
 def naive_dft(input_array):
@@ -56,7 +57,7 @@ def naive_2d_dft_k_l(input_array, k, l):
 # Assuming input_array size is a power of 2
 def inner_fft_dft(input_array, k):
     size = input_array.size
-    if size > 16:
+    if size > smallest_size_array:
         even = inner_fft_dft(input_array[::2], k)
         odd = inner_fft_dft(input_array[1::2], k)
         return even + np.exp(-1j * 2 * np.pi * k / size) * odd
@@ -77,38 +78,79 @@ def naive_dft_k_precomputed(input_array, k):
     X = 0
     for n in range(N):
         xn = input_array[n]
-        a = np.power(coeff_array[n], k)
+        a = np.power(dft_coeff_array[n], k)
+        X += xn * a
+    return X
+
+def naive_inverse_dft_n_precomputed(input_array, n):
+    N = input_array.size
+    X = 0
+    for k in range(N):
+        xn = input_array[k]
+        a = np.power(inverse_dft_coeff_array[k], n)
         X += xn * a
     return X
 
 
-def inverse_fft_dft():
-    pass
+def outer_inverse_fft_dft(input_array):
+    size = input_array.size
+    output_array = np.zeros(size, dtype=complex)
+
+    for k in range(size):
+        output_array[k] = (1 / size) * inner_inverse_fft_dft(input_array, k)
+    return output_array
+
+
+def inner_inverse_fft_dft(input_array, n):
+    size = input_array.size
+    if size > smallest_size_array:
+        even = inner_inverse_fft_dft(input_array[::2], n)
+        odd = inner_inverse_fft_dft(input_array[1::2], n)
+        return even + np.exp(1j * 2 * np.pi * n / size) * odd
+    else:
+        return naive_inverse_dft_n_precomputed(input_array, n)
 
 
 def fft_2d_dft(input_array):
     R, C = input_array.shape
     output_array = np.zeros((R, C), dtype=np.complex_)
+
+    def fft_2d_dft_k_l(input_array, k, l):
+        R, C = input_array.shape
+        input_array_transpose = input_array.transpose()
+
+        temp = np.zeros(C, dtype=np.complex_)
+
+        for i in range(C):
+            temp[i] = inner_fft_dft(input_array_transpose[i], k)
+
+        return inner_fft_dft(temp, l)
+
     for k in range(R):
         for l in range(C):
             output_array[k][l] = fft_2d_dft_k_l(input_array, k, l)
     return np.array(output_array)
 
 
-def fft_2d_dft_k_l(input_array, k, l):
+def inverse_fft_2d_dft(input_array):
     R, C = input_array.shape
-    input_array_transpose = input_array.transpose()
+    output_array = np.zeros((R, C), dtype=np.complex_)
 
-    temp = np.zeros(C, dtype=np.complex_)
+    def inverse_fft_2d_dft_m_n(input_array, m, n):
+        R, C = input_array.shape
+        input_array_transpose = input_array.transpose()
 
-    for i in range(C):
-        temp[i] = inner_fft_dft(input_array_transpose[i], k)
+        temp = np.zeros(C, dtype=np.complex_)
 
-    return inner_fft_dft(temp, l)
+        for i in range(C):
+            temp[i] = inner_inverse_fft_dft(input_array_transpose[i], m)
 
+        return (1 / (R * C)) * inner_inverse_fft_dft(temp, n)
 
-def inverse_fft_2d_dft():
-    pass
+    for m in range(R):
+        for n in range(C):
+            output_array[m][n] = inverse_fft_2d_dft_m_n(input_array, m, n)
+    return np.array(output_array)
 
 
 def main():
@@ -155,9 +197,16 @@ def main():
 
 
 if __name__ == "__main__":
-    input_array = np.array([[1, 2, 3], [2, 2, 2], [3, 4, 5]])
-    a2 = naive_2d_dft(input_array)
-    a3 = np.fft.fft2(input_array)
-    print("CORRECT output ", a3)
-    print("TY output ", a1)
-    print("MY output ", a2)
+    input_array = np.array(range(64))
+    a2 = outer_inverse_fft_dft(input_array)
+    a3 = np.fft.ifft(input_array)
+    print("CORRECT output \n", a3)
+    print("MY output \n", a2)
+
+    input_list = [list(range(16)) for i in range(16)]
+    input_array = np.array(input_list)
+    fourier_array = np.fft.fft2(input_array)
+    a2 = inverse_fft_2d_dft(fourier_array)
+    a3 = np.fft.ifft2(fourier_array)
+    print("CORRECT output \n", a3)
+    print("MY output \n", a2)
