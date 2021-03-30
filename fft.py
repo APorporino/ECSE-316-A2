@@ -78,7 +78,11 @@ def naive_dft_k_precomputed(input_array, k):
     X = 0
     for n in range(N):
         xn = input_array[n]
-        a = np.power(dft_coeff_array[n], k)
+        if (N < 16):
+            arg = -1j * 2 * math.pi * k * n / N
+            a = np.exp(arg)
+        else:
+            a = np.power(dft_coeff_array[n], k)
         X += xn * a
     return X
 
@@ -90,7 +94,6 @@ def naive_inverse_dft_n_precomputed(input_array, n):
         a = np.power(inverse_dft_coeff_array[k], n)
         X += xn * a
     return X
-
 
 def outer_inverse_fft_dft(input_array):
     size = input_array.size
@@ -197,6 +200,16 @@ def main():
 
 
 if __name__ == "__main__":
+    j = np.arange(64)
+    i = np.arange(64)
+    ii = np.arange(64)
+    jj = np.arange(64)
+
+    input_arr = np.array([np.arange(64), np.arange(64)])
+    output = np.fft.fft2(input_arr)
+    output2 = fft_2d_dft(input_arr)
+
+    print(np.allclose(output, output2))
     input_array = np.array(range(64))
     a2 = outer_inverse_fft_dft(input_array)
     a3 = np.fft.ifft(input_array)
