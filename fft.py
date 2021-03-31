@@ -1,11 +1,13 @@
 import numpy as np
-import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 import cv2
 import math
 import os
 import argparse
+from datetime import datetime
 
-smallest_size_array = 16
+smallest_size_array = 4
 dft_coeff_array = [np.exp(-1j * 2 * np.pi * m / smallest_size_array) for m in range(smallest_size_array)]
 inverse_dft_coeff_array = [np.exp(1j * 2 * np.pi * k / smallest_size_array) for k in range(smallest_size_array)]
 
@@ -86,6 +88,7 @@ def naive_dft_k_precomputed(input_array, k):
         X += xn * a
     return X
 
+
 def naive_inverse_dft_n_precomputed(input_array, n):
     N = input_array.size
     X = 0
@@ -94,6 +97,7 @@ def naive_inverse_dft_n_precomputed(input_array, n):
         a = np.power(inverse_dft_coeff_array[k], n)
         X += xn * a
     return X
+
 
 def outer_inverse_fft_dft(input_array):
     size = input_array.size
@@ -129,9 +133,17 @@ def fft_2d_dft(input_array):
 
         return inner_fft_dft(temp, l)
 
+    print("R, C:", R, C)
     for k in range(R):
+        print("K: ", k)
         for l in range(C):
+            now = datetime.now()
+
+            current_time = now.strftime("%H:%M:%S")
+            print("Current Time =", current_time)
+            print("L:", l)
             output_array[k][l] = fft_2d_dft_k_l(input_array, k, l)
+
     return np.array(output_array)
 
 
@@ -156,6 +168,40 @@ def inverse_fft_2d_dft(input_array):
     return np.array(output_array)
 
 
+def first_mode(img):
+
+    img_dft = np.fft.fft(img)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle('Original Image and Fourier Transform')
+
+    ax1.hist2d(img)
+    ax2.hist2d(img_dft, norm=LogNorm())
+    fig.show()
+
+
+def second_mode(img):
+    # img_fft = fft_2d_dft(img)
+    img_fft = np.fft.fft2(img)
+    M, N = img_fft.shape
+
+    cut_off = np.zeros(img_fft.shape)
+
+    for k in range(M):
+        for l in range(N):
+            if np.sqrt(np.power(k, 2) + np.power(l, 2)) < 2/3:
+                cut_off[k,l] = 1
+
+    filtered_dft = np.multiply(img_fft, cut_off)
+    filtered_img = np.fft.ifft2(filtered_dft)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle('Original Image and Denoised Image')
+    ax1.plot(img)
+    ax2.plot(filtered_img)
+    fig.show()
+    return filtered_img
+
+
 def main():
     parser = argparse.ArgumentParser(description='Arguments for FFT program')
     parser.add_argument('--mode', '-m', required=False, default='1', help='Mode')
@@ -166,19 +212,18 @@ def main():
     img_path = os.path.join(dir_path, args.image)
     img = cv2.imread(img_path)
 
-    if not img:
+    if img is None:
         print("Invalid path provided")
         return -1
 
     old_width = img.shape[1]
     old_height = img.shape[0]
 
-    new_height = np.power(2, np.ceil(np.log2(old_height)))
-    new_width = np.power(2, np.ceil(np.log2(old_width)))
+    new_height = int(np.power(2, np.floor(np.log2(old_height))))
+    new_width = int(np.power(2, np.floor(np.log2(old_width))))
 
-    np.resize(img, (new_width, new_height))
+    img = np.resize(img, (new_width, new_height))
 
-    mode = 0
     try:
         mode = int(args.mode)
         if mode < 1 or mode > 4:
@@ -188,9 +233,12 @@ def main():
         return -1
 
     if mode == 1:
-        print()
+        img_fft = first_mode(img)
+        print(img_fft)
+        print(np.fft.fft2(img))
+        # np.allclose(img_fft, np.fft.fft2(img))
     elif mode == 2:
-        print()
+        second_mode(img)
     elif mode == 3:
         print()
     elif mode == 4:
@@ -200,26 +248,27 @@ def main():
 
 
 if __name__ == "__main__":
-    j = np.arange(64)
-    i = np.arange(64)
-    ii = np.arange(64)
-    jj = np.arange(64)
-
-    input_arr = np.array([np.arange(64), np.arange(64)])
-    output = np.fft.fft2(input_arr)
-    output2 = fft_2d_dft(input_arr)
-
-    print(np.allclose(output, output2))
-    input_array = np.array(range(64))
-    a2 = outer_inverse_fft_dft(input_array)
-    a3 = np.fft.ifft(input_array)
-    print("CORRECT output \n", a3)
-    print("MY output \n", a2)
-
-    input_list = [list(range(16)) for i in range(16)]
-    input_array = np.array(input_list)
-    fourier_array = np.fft.fft2(input_array)
-    a2 = inverse_fft_2d_dft(fourier_array)
-    a3 = np.fft.ifft2(fourier_array)
-    print("CORRECT output \n", a3)
-    print("MY output \n", a2)
+    main()
+    # j = np.arange(64)
+    # i = np.arange(64)
+    # ii = np.arange(64)
+    # jj = np.arange(64)
+    #
+    # input_arr = np.array([np.arange(64), np.arange(64)])
+    # output = np.fft.fft2(input_arr)
+    # output2 = fft_2d_dft(input_arr)
+    #
+    # print(np.allclose(output, output2))
+    # input_array = np.array(range(64))
+    # a2 = outer_inverse_fft_dft(input_array)
+    # a3 = np.fft.ifft(input_array)
+    # print("CORRECT output \n", a3)
+    # print("MY output \n", a2)
+    #
+    # input_list = [list(range(16)) for i in range(16)]
+    # input_array = np.array(input_list)
+    # fourier_array = np.fft.fft2(input_array)
+    # a2 = inverse_fft_2d_dft(fourier_array)
+    # a3 = np.fft.ifft2(fourier_array)
+    # print("CORRECT output \n", a3)
+    # print("MY output \n", a2)
