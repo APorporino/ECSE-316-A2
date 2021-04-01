@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 from matplotlib.colors import LogNorm
 import cv2
 import math
@@ -170,13 +171,13 @@ def inverse_fft_2d_dft(input_array):
 
 def first_mode(img):
 
-    img_dft = np.fft.fft(img)
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle('Original Image and Fourier Transform')
+    img_dft = np.fft.fft(img).real
 
-    ax1.hist2d(img)
-    ax2.hist2d(img_dft, norm=LogNorm())
-    fig.show()
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+    fig.suptitle('Original Image and Fourier Transform')
+    ax[0].imshow(img)
+    ax[1].imshow(img_dft, norm=LogNorm())
+    plt.show()
 
 
 def second_mode(img):
@@ -184,22 +185,25 @@ def second_mode(img):
     img_fft = np.fft.fft2(img)
     M, N = img_fft.shape
 
-    cut_off = np.zeros(img_fft.shape)
+    removed_high_freq = np.copy(img_fft)
 
-    for k in range(M):
-        for l in range(N):
-            if np.sqrt(np.power(k, 2) + np.power(l, 2)) < 2/3:
-                cut_off[k,l] = 1
+    k_cut_off = int(0.10 * M)
+    l_cut_off = int(0.10 * N)
 
-    filtered_dft = np.multiply(img_fft, cut_off)
-    filtered_img = np.fft.ifft2(filtered_dft)
+    for k in range(k_cut_off, M - k_cut_off):
+        for l in range(l_cut_off, N - l_cut_off):
+            removed_high_freq[k,l] = 0
 
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    # denoised_img = inverse_fft_2d_dft(filtered_dft)
+    denoised_img = np.fft.ifft2(removed_high_freq).real
+
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
     fig.suptitle('Original Image and Denoised Image')
-    ax1.plot(img)
-    ax2.plot(filtered_img)
-    fig.show()
-    return filtered_img
+    ax[0].imshow(img)
+    ax[1].imshow(denoised_img)
+    plt.show()
+    return denoised_img
 
 
 def main():
@@ -210,7 +214,8 @@ def main():
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     img_path = os.path.join(dir_path, args.image)
-    img = cv2.imread(img_path)
+    with Image.open(img_path) as img_file:
+        img = np.array(img_file)
 
     if img is None:
         print("Invalid path provided")
@@ -219,10 +224,10 @@ def main():
     old_width = img.shape[1]
     old_height = img.shape[0]
 
-    new_height = int(np.power(2, np.floor(np.log2(old_height))))
-    new_width = int(np.power(2, np.floor(np.log2(old_width))))
+    new_height = int(np.power(2, np.ceil(np.log2(old_height))))
+    new_width = int(np.power(2, np.ceil(np.log2(old_width))))
 
-    img = np.resize(img, (new_width, new_height))
+    img = cv2.resize(img, (new_width, new_height))
 
     try:
         mode = int(args.mode)
@@ -238,6 +243,7 @@ def main():
         print(np.fft.fft2(img))
         # np.allclose(img_fft, np.fft.fft2(img))
     elif mode == 2:
+        print('Mode 2.')
         second_mode(img)
     elif mode == 3:
         print()
