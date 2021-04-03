@@ -48,24 +48,19 @@ class TestFFTProgram(unittest.TestCase):
         self.assertTrue(np.allclose(oracle, result))
 
     def test1_fft_2d(self):
-        input_array_2d_index0 = np.arange(32)
-        input_array_2d_index1 = np.arange(32)
-        input_array_2d_index2 = np.arange(32)
+        input_array_2d = np.random.rand(3, 32)
 
-        input_array_2d = np.array([input_array_2d_index0, input_array_2d_index1, input_array_2d_index2])
         oracle = np.fft.fft2(input_array_2d)
         result = fft.fft_2d_dft(input_array_2d)
         self.assertTrue(np.allclose(oracle, result))
 
     def test2_fft_2d(self):
-        input_array_2d_index0 = np.arange(256)
-        input_array_2d_index1 = np.arange(256)
-        input_array_2d_index2 = np.arange(256)
+        input_array_2d = np.random.rand(3, 256)
 
-        input_array_2d = np.array([input_array_2d_index0, input_array_2d_index1, input_array_2d_index2])
         oracle = np.fft.fft2(input_array_2d)
         result = fft.fft_2d_dft(input_array_2d)
         self.assertTrue(np.allclose(oracle, result))
+
 
 if __name__ == '__main__':
     unittest.main()
