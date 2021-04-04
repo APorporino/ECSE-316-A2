@@ -61,6 +61,20 @@ class TestFFTProgram(unittest.TestCase):
         result = fft.fft_2d_dft(input_array_2d)
         self.assertTrue(np.allclose(oracle, result))
 
+    def test1_inverse_fft(self):
+        input_array = np.random.rand(256)
+        oracle = np.fft.fft(input_array)
+
+        result = fft.outer_inverse_fft_dft(oracle)
+        self.assertTrue(np.allclose(input_array, result))
+
+    def test1_inverse_fft_2d(self):
+        input_array_2d = np.random.rand(3, 256)
+        oracle = np.fft.fft2(input_array_2d)
+
+        result = fft.inverse_fft_2d_dft(oracle)
+        self.assertTrue(np.allclose(input_array_2d, result))
+
 
 if __name__ == '__main__':
     unittest.main()

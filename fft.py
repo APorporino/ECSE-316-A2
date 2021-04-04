@@ -15,6 +15,11 @@ inverse_dft_coeff_array = [np.exp(1j * 2 * np.pi * k / smallest_size_array) for 
 
 
 def naive_dft(input_array):
+    """
+    Will take naive DFT of input 1 dimensional array.
+    :param input_array: 1 dimensional array
+    :return: Array representing the fourier transform of the input array
+    """
     N = input_array.size
     output_array = np.zeros(N, dtype=np.complex_)
     for k in range(N):
@@ -28,6 +33,12 @@ def naive_dft(input_array):
 
 
 def naive_dft_k(input_array, k):
+    """
+    This function will use the naive method to calculate the DFT but only for 1 k value.
+    :param input_array:
+    :param k: Represents the index to use for the DFT function
+    :return: Returns DFT of the input array with k = {k}
+    """
     N = input_array.size
     X = 0
     for n in range(N):
@@ -38,6 +49,11 @@ def naive_dft_k(input_array, k):
 
 
 def naive_2d_dft(input_array):
+    """
+    Will take naive DFT of input 2 dimensional array.
+    :param input_array: 2 dimensional array.
+    :return: Array representing the fourier transform of the input array
+    """
     R, C = input_array.shape
     output_array = np.zeros((R, C), dtype=np.complex_)
     for k in range(R):
@@ -47,19 +63,30 @@ def naive_2d_dft(input_array):
 
 
 def naive_2d_dft_k_l(input_array, k, l):
+    """
+    This function will use the naive method to calculate the DFT
+    of a 2d array but only for 1 (k,l) value.
+    :param input_array: 2 dimensional array.
+    :param k:
+    :param l:
+    :return:
+    """
     R, C = input_array.shape
     input_array_transpose = input_array.transpose()
-
     temp = np.zeros(C, dtype=np.complex_)
-
     for i in range(C):
         temp[i] = naive_dft_k(input_array_transpose[i], k)
-
     return naive_dft_k(temp, l)
 
 
-# Assuming input_array size is a power of 2
 def inner_fft_dft(input_array, k):
+    """
+    This function will use the FFT algorithm to take the DFT of an input array
+    for only 1 k value.
+    :param input_array: A 2d array with size that is a power of 2.
+    :param k:
+    :return: One value that represents the DFT of input array with k = {k}
+    """
     size = input_array.size
     if size > smallest_size_array:
         even = inner_fft_dft(input_array[::2], k)
@@ -70,6 +97,11 @@ def inner_fft_dft(input_array, k):
 
 
 def outer_fft_dft(input_array):
+    """
+    Will take the FFT of input array.
+    :param input_array: A 2d array with size that is a power of 2.
+    :return: Array that represents the DFT of the input array.
+    """
     size = input_array.size
     output_array = np.zeros(size, dtype=np.complex_)
     for k in range(input_array.size):
@@ -78,6 +110,14 @@ def outer_fft_dft(input_array):
 
 
 def naive_dft_k_precomputed(input_array, k):
+    """
+    This function will use naive method to find the DFT of input array at index k,
+    but will use the precomputed array to speed up computation. This is the key
+    to the FFT algorithm.
+    :param input_array: Input arrsy of size 16 or less
+    :param k:
+    :return: One value that represents the DFT of input array with k = {k}
+    """
     N = input_array.size
     X = 0
     for n in range(N):
@@ -92,6 +132,12 @@ def naive_dft_k_precomputed(input_array, k):
 
 
 def naive_inverse_dft_n_precomputed(input_array, n):
+    """
+    Find's inverse DFT for input array at index n={n} using naive method with precomputed array.
+    :param input_array:
+    :param n:
+    :return:
+    """
     N = input_array.size
     X = 0
     for k in range(N):
@@ -102,6 +148,11 @@ def naive_inverse_dft_n_precomputed(input_array, n):
 
 
 def outer_inverse_fft_dft(input_array):
+    """
+    Will find the inverse DFT of given array.
+    :param input_array:
+    :return:
+    """
     size = input_array.size
     output_array = np.zeros(size, dtype=complex)
 
@@ -111,6 +162,12 @@ def outer_inverse_fft_dft(input_array):
 
 
 def inner_inverse_fft_dft(input_array, n):
+    """
+    Will find inverse DFT for given array with index n={n}
+    :param input_array:
+    :param n:
+    :return:
+    """
     size = input_array.size
     if size > smallest_size_array:
         even = inner_inverse_fft_dft(input_array[::2], n)
@@ -121,15 +178,25 @@ def inner_inverse_fft_dft(input_array, n):
 
 
 def fft_2d_dft(input_array):
+    """
+    This method will compute the DFT of the input array using the FFT algorithm.
+    :param input_array:
+    :return:
+    """
     R, C = input_array.shape
     output_array = np.zeros((R, C), dtype=np.complex_)
 
     def fft_2d_dft_k_l(input_array, k, l):
+        """
+        Will calculate DFT for 1 k and 1 l.
+        :param input_array:
+        :param k:
+        :param l:
+        :return:
+        """
         R, C = input_array.shape
         input_array_transpose = input_array.transpose()
-
         temp = np.zeros(C, dtype=np.complex_)
-
         for i in range(C):
             temp[i] = inner_fft_dft(input_array_transpose[i], k)
 
@@ -137,19 +204,19 @@ def fft_2d_dft(input_array):
 
     # print("R, C:", R, C)
     for k in range(R):
-        print("K: ", k)
+        #print("K: ", k)
         for l in range(C):
-            # now = datetime.now()
-            #
-            # current_time = now.strftime("%H:%M:%S")
-            # print("Current Time =", current_time)
-            # print("L:", l)
             output_array[k][l] = fft_2d_dft_k_l(input_array, k, l)
 
     return np.array(output_array)
 
 
 def inverse_fft_2d_dft(input_array):
+    """
+    Will compute the inverse DFT for a 2d array using FFT.
+    :param input_array:
+    :return:
+    """
     R, C = input_array.shape
     output_array = np.zeros((R, C), dtype=np.complex_)
 
@@ -181,6 +248,12 @@ def first_mode(img):
 
 
 def second_mode(img):
+    """
+    This method is for the second mode and is used to denoise the input img. It will graph the
+    original image as well as the denoised one.
+    :param img:
+    :return:
+    """
     img_fft = np.fft.fft2(img)
     M, N = img_fft.shape
 
@@ -206,6 +279,13 @@ def second_mode(img):
 
 
 def third_mode_compression_threshold_option(img):
+    """
+    This method was used to compress the input img using the threshold algorithm idea.
+    As with the other compression algorithm, it saves the fourier coefficients for each level of compression
+    in a csv file.
+    :param img:
+    :return:
+    """
     img_fft = np.fft.fft2(img)
     R, C = img_fft.shape
 
@@ -235,6 +315,13 @@ def third_mode_compression_threshold_option(img):
 
 
 def calculate_threshold(min_mag, max_mag, percentile):
+    """
+    This method will be used to calculate the threshold value.
+    :param min_mag: Minimum magnitude of an element in the array
+    :param max_mag: Maximum magnitude of an element in the array
+    :param percentile: Percentage of compression
+    :return:
+    """
     difference = max_mag - min_mag
     if (min_mag < 0):
         difference = max_mag + (-1) * min_mag
@@ -242,6 +329,12 @@ def calculate_threshold(min_mag, max_mag, percentile):
 
 
 def compress_threshold(img, threshold):
+    """
+    This method will actually compress teh image given the threshold.
+    :param img:
+    :param threshold:
+    :return:
+    """
     R, C = img.shape
     for k in range(R):
         for l in range(C):
@@ -251,6 +344,13 @@ def compress_threshold(img, threshold):
 
 
 def third_mode(img):
+    """
+    Actual compression algorithm implemented. It uses same the technique for denoising.
+    It will also save the fourier coefficients for each level of compression, as well as a png
+    file of that compressed image.
+    :param img:
+    :return:
+    """
     img_fft = np.fft.fft2(img)
     R, C = img_fft.shape
 
@@ -269,21 +369,21 @@ def third_mode(img):
     compression_95 = np.fft.ifft2(img_compressed_fft[4]).real
 
     # #saves data as png
-    # data = Image.fromarray(compression_15)
-    # data = data.convert("L")
-    # data.save('15.png')
-    # data = Image.fromarray(compression_30)
-    # data = data.convert("L")
-    # data.save('30.png')
-    # data = Image.fromarray(compression_50)
-    # data = data.convert("L")
-    # data.save('50.png')
-    # data = Image.fromarray(compression_70)
-    # data = data.convert("L")
-    # data.save('70.png')
-    # data = Image.fromarray(compression_95)
-    # data = data.convert("L")
-    # data.save('95.png')
+    data = Image.fromarray(compression_15)
+    data = data.convert("L")
+    data.save('15.png')
+    data = Image.fromarray(compression_30)
+    data = data.convert("L")
+    data.save('30.png')
+    data = Image.fromarray(compression_50)
+    data = data.convert("L")
+    data.save('50.png')
+    data = Image.fromarray(compression_70)
+    data = data.convert("L")
+    data.save('70.png')
+    data = Image.fromarray(compression_95)
+    data = data.convert("L")
+    data.save('95.png')
 
     # plot data
     fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
@@ -304,6 +404,12 @@ def third_mode(img):
 
 
 def compress(img, percentage_removed):
+    """
+    This method will be used to actually compress the img given the level of compression.
+    :param img:
+    :param percentage_removed:
+    :return:
+    """
     axis_percentage_removed = math.sqrt(percentage_removed)
     R, C = img.shape
 
@@ -317,6 +423,14 @@ def compress(img, percentage_removed):
 
 
 def fourth_mode():
+    """
+    The fourth mode will simply read the data from two files:
+        "runtime_data_fft.csv" and "runtime_data_naive.csv"
+    and graph the runtimes using matplotlib. It assumes all data is there.
+
+    To actually generate the runtime data, we must run the runtime.py file in this same dir.
+    :return:
+    """
     try:
         y_axis = [32, 64]
         fft_points = [6]

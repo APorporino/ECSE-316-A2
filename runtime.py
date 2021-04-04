@@ -9,7 +9,11 @@ import time
 
 
 def generate_data():
-    """ Note that to run Naive method for a 2d array of size 128 takes around 1 hour. """
+    """
+    Running this function will generate all data needed for our mode 4 method.
+
+    It will save the data in two csv files. One for naive and one for FFT
+    """
 
     sizes = [32, 64]
     data_naive = []
@@ -28,24 +32,35 @@ def generate_data():
 
 
 def runtime_calculation(size, num_runs):
+    """
+    This function will run {num_runs} amount of experiments on an square matrix of size {size}x{size}.
+    The experiments time the runtime of the naive DFT, and the FFT where the input is the array.
+
+    :param size: Size of the rows and columns of the random array to test the methods.
+    :param num_runs: Number of times the experiment should run
+    :return: Array with two elements.
+            The first element is the array containing the data for the naive DFT
+            The second element is the array containing the data for the FFT
+    """
     data_naive = []
     data_fft = []
     for i in range(num_runs):
         random_2d_array = np.random.rand(size, size)
 
-        start_naive = time.time()
         print("Naive round: {}, size: {}".format(i, size))
+        start_naive = time.time()
         naive_2d_dft(random_2d_array)
         end_naive = time.time()
 
-        start_fft = time.time()
         print("FFT round: {}, size: {}".format(i, size))
+        start_fft = time.time()
         fft_2d_dft(random_2d_array)
         end_fft = time.time()
 
         data_naive.append(end_naive - start_naive)
         data_fft.append(end_fft - start_fft)
     return data_naive, data_fft
+
 
 if __name__ == '__main__':
     generate_data()
