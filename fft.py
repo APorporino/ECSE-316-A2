@@ -421,7 +421,7 @@ def fourth_mode():
             reader = csv.reader(csvfile, delimiter=",")
             for row in reader:
                 fft_points.append(float(row[0]))
-                fft_std.append(float(row[1]))
+                fft_std.append(2*float(row[1]))
         with open("runtime_data_naive.csv") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             for row in reader:
@@ -432,7 +432,7 @@ def fourth_mode():
 
         plt.errorbar(y_axis, fft_points,yerr = fft_std, label="FFT")
         # remove the line below to see the unskewed FFT runtime graph.
-        plt.errorbar(y_axis, naive_points, yerr = naive_std, label="Naive DFT")
+        #plt.errorbar(y_axis, naive_points, yerr = naive_std, label="Naive DFT")
         plt.xlabel('Size of rows and columns of input matrix')
         plt.ylabel('Mean runtime for 10 experiments (seconds)')
         plt.title('Runtime Stats Plot')
