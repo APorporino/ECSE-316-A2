@@ -69,7 +69,7 @@ class TestFFTProgram(unittest.TestCase):
         self.assertTrue(np.allclose(input_array, result))
 
     def test1_inverse_fft_2d(self):
-        input_array_2d = np.random.rand(128, 128)
+        input_array_2d = np.random.rand(32, 64)
         oracle = np.fft.fft2(input_array_2d)
 
         result = fft.inverse_fft_2d(oracle)
