@@ -7,9 +7,8 @@ import math
 import os
 import argparse
 import csv
-from datetime import datetime
 
-smallest_size_array = 4
+smallest_size_array = 16
 dft_coeff_array = [np.exp(-1j * 2 * np.pi * m / smallest_size_array) for m in range(smallest_size_array)]
 inverse_dft_coeff_array = [np.exp(1j * 2 * np.pi * k / smallest_size_array) for k in range(smallest_size_array)]
 
@@ -29,7 +28,61 @@ def naive_dft(input_array):
             arg = -1j * 2 * math.pi * k * n / N
             X += xn * np.exp(arg)
         output_array[k] = X
+    return output_array
+
+
+def naive_inverse_dft(input_array):
+    """
+        ONLY FOR USE BY inverse_fft_dft. Will take naive IDFT of input 1 dimensional array.
+        :param input_array: 1 dimensional array
+        :return: Array representing the inverse fourier transform of the input array
+        """
+    N = input_array.size
+    output_array = np.zeros(N, dtype=np.complex_)
+    for k in range(N):
+        X = 0
+        for n in range(N):
+            xn = input_array[n]
+            arg = 1j * 2 * math.pi * k * n / N
+            X += xn * np.exp(arg)
+        output_array[k] = X
+    return output_array
+
+
+def naive_dft_precomputed(input_array):
+    """
+    Will take naive DFT of input 1 dimensional array of size smallest_size_array. Used by fft_dft only.
+    :param input_array: 1 dimensional array
+    :return: Array representing the fourier transform of the input array
+    """
+
+    N = input_array.size
+    output_array = np.zeros(N, dtype=np.complex_)
+    for k in range(N):
+        coeff = np.power(dft_coeff_array, np.full(N, k))
+        temp = np.multiply(input_array, coeff)
+        X = np.sum(temp)
+        output_array[k] = X
     return np.array(output_array)
+
+
+def naive_inverse_dft_precomputed(input_array):
+    """
+    Will take naive DFT of input 1 dimensional array of size smallest_size_array. Used by fft_dft only.
+    :param input_array: 1 dimensional array
+    :return: Array representing the fourier transform of the input array
+    """
+
+    N = input_array.size
+    output_array = np.zeros(N, dtype=np.complex_)
+    for k in range(N):
+        coeff = np.power(inverse_dft_coeff_array, np.full(N, k))
+        temp = np.multiply(input_array, coeff)
+        X = np.sum(temp)
+        output_array[k] = X
+    # size_coeff = np.full(N, 1 / N)
+    # return np.multiply(size_coeff, np.array(output_array))
+    return output_array
 
 
 def naive_dft_k(input_array, k):
@@ -79,162 +132,73 @@ def naive_2d_dft_k_l(input_array, k, l):
     return naive_dft_k(temp, l)
 
 
-def inner_fft_dft(input_array, k):
-    """
-    This function will use the FFT algorithm to take the DFT of an input array
-    for only 1 k value.
-    :param input_array: A 2d array with size that is a power of 2.
-    :param k:
-    :return: One value that represents the DFT of input array with k = {k}
-    """
-    size = input_array.size
-    if size > smallest_size_array:
-        even = inner_fft_dft(input_array[::2], k)
-        odd = inner_fft_dft(input_array[1::2], k)
-        return even + np.exp(-1j * 2 * np.pi * k / size) * odd
-    else:
-        return naive_dft_k_precomputed(input_array, k)
-
-
-def outer_fft_dft(input_array):
+def fft_dft(input_array):
     """
     Will take the FFT of input array.
-    :param input_array: A 2d array with size that is a power of 2.
+    :param input_array: A 1d array with size that is a power of 2.
     :return: Array that represents the DFT of the input array.
     """
+
     size = input_array.size
-    output_array = np.zeros(size, dtype=np.complex_)
-    for k in range(input_array.size):
-        output_array[k] = inner_fft_dft(input_array, k)
-    return output_array
 
-
-def naive_dft_k_precomputed(input_array, k):
-    """
-    This function will use naive method to find the DFT of input array at index k,
-    but will use the precomputed array to speed up computation. This is the key
-    to the FFT algorithm.
-    :param input_array: Input arrsy of size 16 or less
-    :param k:
-    :return: One value that represents the DFT of input array with k = {k}
-    """
-    N = input_array.size
-    X = 0
-    for n in range(N):
-        xn = input_array[n]
-        if (N < 16):
-            arg = -1j * 2 * math.pi * k * n / N
-            a = np.exp(arg)
-        else:
-            a = np.power(dft_coeff_array[n], k)
-        X += xn * a
-    return X
-
-
-def naive_inverse_dft_n_precomputed(input_array, n):
-    """
-    Find's inverse DFT for input array at index n={n} using naive method with precomputed array.
-    :param input_array:
-    :param n:
-    :return:
-    """
-    N = input_array.size
-    X = 0
-    for k in range(N):
-        xn = input_array[k]
-        a = np.power(inverse_dft_coeff_array[k], n)
-        X += xn * a
-    return X
-
-
-def outer_inverse_fft_dft(input_array):
-    """
-    Will find the inverse DFT of given array.
-    :param input_array:
-    :return:
-    """
-    size = input_array.size
-    output_array = np.zeros(size, dtype=complex)
-
-    for k in range(size):
-        output_array[k] = (1 / size) * inner_inverse_fft_dft(input_array, k)
-    return output_array
-
-
-def inner_inverse_fft_dft(input_array, n):
-    """
-    Will find inverse DFT for given array with index n={n}
-    :param input_array:
-    :param n:
-    :return:
-    """
-    size = input_array.size
-    if size > smallest_size_array:
-        even = inner_inverse_fft_dft(input_array[::2], n)
-        odd = inner_inverse_fft_dft(input_array[1::2], n)
-        return even + np.exp(1j * 2 * np.pi * n / size) * odd
+    if size == smallest_size_array:
+        return naive_dft_precomputed(input_array)
     else:
-        return naive_inverse_dft_n_precomputed(input_array, n)
+        x_even = fft_dft(input_array[0::2])
+        x_odd = fft_dft(input_array[1::2])
+
+        arg = -1j * 2 * np.pi / size
+
+        coeff = np.exp(arg * np.arange(size))
+
+        odd_with_coeff_first_half = coeff[:size // 2] * x_odd
+        odd_with_coeff_second_half = coeff[size // 2:] * x_odd
+
+        return np.concatenate([x_even + odd_with_coeff_first_half, x_even + odd_with_coeff_second_half])
 
 
-def fft_2d_dft(input_array):
-    """
-    This method will compute the DFT of the input array using the FFT algorithm.
-    :param input_array:
-    :return:
-    """
-    R, C = input_array.shape
-    output_array = np.zeros((R, C), dtype=np.complex_)
-
-    def fft_2d_dft_k_l(input_array, k, l):
+def inverse_fft_dft(input_array):
+    def inner_inverse_fft_dft(input_array):
         """
-        Will calculate DFT for 1 k and 1 l.
-        :param input_array:
-        :param k:
-        :param l:
-        :return:
+        Will take the inverse fft of input array.
+        :param input_array: A 1d array with size that is a power of 2.
+        :return: Array that represents the IDFT of the input array.
         """
-        R, C = input_array.shape
-        input_array_transpose = input_array.transpose()
-        temp = np.zeros(C, dtype=np.complex_)
-        for i in range(C):
-            temp[i] = inner_fft_dft(input_array_transpose[i], k)
 
-        return inner_fft_dft(temp, l)
+        size = input_array.size
 
-    # print("R, C:", R, C)
-    for k in range(R):
-        #print("K: ", k)
-        for l in range(C):
-            output_array[k][l] = fft_2d_dft_k_l(input_array, k, l)
+        if size == smallest_size_array:
+            return naive_inverse_dft_precomputed(input_array)
+        elif size < smallest_size_array:
+            return naive_inverse_dft(input_array)
+        else:
+            x_even = inner_inverse_fft_dft(input_array[0::2])
+            x_odd = inner_inverse_fft_dft(input_array[1::2])
 
-    return np.array(output_array)
+            arg = 1j * 2 * np.pi / size
+
+            coeff = np.exp(arg * np.arange(size))
+
+            odd_with_coeff_first_half = coeff[:size // 2] * x_odd
+            odd_with_coeff_second_half = coeff[size // 2:] * x_odd
+
+            return np.concatenate([x_even + odd_with_coeff_first_half, x_even + odd_with_coeff_second_half])
+
+    return (1 / input_array.size) * inner_inverse_fft_dft(input_array)
 
 
-def inverse_fft_2d_dft(input_array):
-    """
-    Will compute the inverse DFT for a 2d array using FFT.
-    :param input_array:
-    :return:
-    """
-    R, C = input_array.shape
-    output_array = np.zeros((R, C), dtype=np.complex_)
+def fft_2d(input_array):
+    input_array = np.apply_along_axis(fft_dft, 1, input_array)
+    input_array = np.apply_along_axis(fft_dft, 0, input_array)
 
-    def inverse_fft_2d_dft_m_n(input_array, m, n):
-        R, C = input_array.shape
-        input_array_transpose = input_array.transpose()
+    return input_array
 
-        temp = np.zeros(C, dtype=np.complex_)
 
-        for i in range(C):
-            temp[i] = inner_inverse_fft_dft(input_array_transpose[i], m)
+def inverse_fft_2d(input_array):
+    input_array = np.apply_along_axis(inverse_fft_dft, 1, input_array)
+    input_array = np.apply_along_axis(inverse_fft_dft, 0, input_array)
 
-        return (1 / (R * C)) * inner_inverse_fft_dft(temp, n)
-
-    for m in range(R):
-        for n in range(C):
-            output_array[m][n] = inverse_fft_2d_dft_m_n(input_array, m, n)
-    return np.array(output_array)
+    return input_array
 
 
 def first_mode(img):
@@ -274,7 +238,7 @@ def second_mode(img):
     ax[1].imshow(denoised_img)
     plt.show()
     print("Number of total fourier coefficients in original image: {}".format(M * N))
-    print("Number of nonzero Fourier coefficients in image 1: {}".format(.9*M * .9*N))
+    print("Number of nonzero Fourier coefficients in image 1: {}".format(.9 * M * .9 * N))
     return denoised_img
 
 
@@ -433,8 +397,8 @@ def fourth_mode():
     """
     try:
         y_axis = [32, 64]
-        fft_points = [6]
-        naive_points = [1]
+        fft_points = []
+        naive_points = []
         with open("runtime_data_fft.csv") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             for row in reader:

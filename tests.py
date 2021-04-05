@@ -37,42 +37,42 @@ class TestFFTProgram(unittest.TestCase):
         input_array_1d = np.arange(16)
 
         oracle = np.fft.fft(input_array_1d)
-        result = fft.outer_fft_dft(input_array_1d)
+        result = fft.fft_dft(input_array_1d)
         self.assertTrue(np.allclose(oracle, result))
 
     def test2_fft(self):
         input_array_1d = np.arange(256)
 
         oracle = np.fft.fft(input_array_1d)
-        result = fft.outer_fft_dft(input_array_1d)
+        result = fft.fft_dft(input_array_1d)
         self.assertTrue(np.allclose(oracle, result))
 
     def test1_fft_2d(self):
-        input_array_2d = np.random.rand(3, 32)
+        input_array_2d = np.random.rand(32, 32)
 
         oracle = np.fft.fft2(input_array_2d)
-        result = fft.fft_2d_dft(input_array_2d)
+        result = fft.fft_2d(input_array_2d)
         self.assertTrue(np.allclose(oracle, result))
 
     def test2_fft_2d(self):
-        input_array_2d = np.random.rand(3, 256)
+        input_array_2d = np.random.rand(64, 64)
 
         oracle = np.fft.fft2(input_array_2d)
-        result = fft.fft_2d_dft(input_array_2d)
+        result = fft.fft_2d(input_array_2d)
         self.assertTrue(np.allclose(oracle, result))
 
     def test1_inverse_fft(self):
         input_array = np.random.rand(256)
         oracle = np.fft.fft(input_array)
 
-        result = fft.outer_inverse_fft_dft(oracle)
+        result = fft.inverse_fft_dft(oracle)
         self.assertTrue(np.allclose(input_array, result))
 
     def test1_inverse_fft_2d(self):
-        input_array_2d = np.random.rand(3, 256)
+        input_array_2d = np.random.rand(128, 128)
         oracle = np.fft.fft2(input_array_2d)
 
-        result = fft.inverse_fft_2d_dft(oracle)
+        result = fft.inverse_fft_2d(oracle)
         self.assertTrue(np.allclose(input_array_2d, result))
 
 
