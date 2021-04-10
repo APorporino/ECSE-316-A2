@@ -202,12 +202,14 @@ def inverse_fft_2d(input_array):
 
 
 def first_mode(img):
-    img_fft = np.fft.fft2(img).real
+    print("Starting FFT for the image - this will take around 90 seconds")
+    img_fft = fft_2d(img).real
+    print("FFT completed")
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
     fig.suptitle('Original Image and Fourier Transform')
-    ax[0].imshow(img)
-    ax[1].imshow(img_fft, norm=LogNorm())
+    ax[0].imshow(img, cmap='gray')
+    ax[1].imshow(img_fft, norm=LogNorm(), cmap='gray')
     plt.show()
 
 
@@ -218,7 +220,9 @@ def second_mode(img):
     :param img:
     :return:
     """
-    img_fft = np.fft.fft2(img)
+    print("Starting FFT for the image - this will take around 90 seconds")
+    img_fft = fft_2d(img)
+    print("FFT completed")
     M, N = img_fft.shape
 
     removed_high_freq = np.copy(img_fft)
@@ -230,12 +234,12 @@ def second_mode(img):
         for l in range(l_cut_off, N - l_cut_off):
             removed_high_freq[k, l] = 0
 
-    denoised_img = np.fft.ifft2(removed_high_freq).real
+    denoised_img = inverse_fft_2d(removed_high_freq).real
 
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
     fig.suptitle('Original Image and Denoised Image')
-    ax[0].imshow(img)
-    ax[1].imshow(denoised_img)
+    ax[0].imshow(img, cmap='gray')
+    ax[1].imshow(denoised_img, cmap='gray')
     plt.show()
     print("Number of total fourier coefficients in original image: {}".format(M * N))
     print("Number of nonzero Fourier coefficients in image 1: {}".format(.9 * M * .9 * N))
@@ -250,7 +254,7 @@ def third_mode_compression_threshold_option(img):
     :param img:
     :return:
     """
-    img_fft = np.fft.fft2(img)
+    img_fft = fft_2d(img)
     R, C = img_fft.shape
 
     img_compressed_fft = [np.copy(img_fft) for i in range(5)]
@@ -261,11 +265,11 @@ def third_mode_compression_threshold_option(img):
         maximum = img_compressed_fft[i].max().real
         t = calculate_threshold(minimum, maximum, compression_levels[i])
         img_compressed_fft[i] = compress_threshold(img_compressed_fft[i], t)
-    compression_15 = np.fft.ifft2(img_compressed_fft[0]).real
-    compression_30 = np.fft.ifft2(img_compressed_fft[1]).real
-    compression_50 = np.fft.ifft2(img_compressed_fft[2]).real
-    compression_70 = np.fft.ifft2(img_compressed_fft[3]).real
-    compression_95 = np.fft.ifft2(img_compressed_fft[4]).real
+    compression_15 = inverse_fft_2d(img_compressed_fft[0]).real
+    compression_30 = inverse_fft_2d(img_compressed_fft[1]).real
+    compression_50 = inverse_fft_2d(img_compressed_fft[2]).real
+    compression_70 = inverse_fft_2d(img_compressed_fft[3]).real
+    compression_95 = inverse_fft_2d(img_compressed_fft[4]).real
     # plot data
     fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
     fig.suptitle('Original and Compressed Images')
@@ -315,7 +319,9 @@ def third_mode(img):
     :param img:
     :return:
     """
-    img_fft = np.fft.fft2(img)
+    print("Starting FFT for the image - this will take around 90 seconds")
+    img_fft = fft_2d(img)
+    print("FFT completed")
     R, C = img_fft.shape
 
     img_compressed_fft = [np.copy(img_fft) for i in range(5)]
@@ -323,14 +329,19 @@ def third_mode(img):
 
     for i in range(5):
         img_compressed_fft[i] = compress(img_compressed_fft[i], compression_levels[i])
-
+        print("Compressed image with level: {}".format(compression_levels[i]))
         # saves fft as csv. Huge file
         np.savetxt("fft_compression_level_{}.csv".format(compression_levels[i]), img_compressed_fft[i], delimiter=",")
-    compression_15 = np.fft.ifft2(img_compressed_fft[0]).real
-    compression_30 = np.fft.ifft2(img_compressed_fft[1]).real
-    compression_50 = np.fft.ifft2(img_compressed_fft[2]).real
-    compression_70 = np.fft.ifft2(img_compressed_fft[3]).real
-    compression_95 = np.fft.ifft2(img_compressed_fft[4]).real
+    print("Reverting image to time domain for compression level: {}. This will take around 90 seconds".format(compression_levels[0]))
+    compression_15 = inverse_fft_2d(img_compressed_fft[0]).real
+    print("Reverting image to time domain for compression level: {}. This will take around 90 seconds".format(compression_levels[1]))
+    compression_30 = inverse_fft_2d(img_compressed_fft[1]).real
+    print("Reverting image to time domain for compression level: {}. This will take around 90 seconds".format(compression_levels[2]))
+    compression_50 = inverse_fft_2d(img_compressed_fft[2]).real
+    print("Reverting image to time domain for compression level: {}. This will take around 90 seconds".format(compression_levels[3]))
+    compression_70 = inverse_fft_2d(img_compressed_fft[3]).real
+    print("Reverting image to time domain for compression level: {}. This will take around 90 seconds".format(compression_levels[4]))
+    compression_95 = inverse_fft_2d(img_compressed_fft[4]).real
 
     # #saves data as png
     data = Image.fromarray(compression_15)
@@ -352,12 +363,12 @@ def third_mode(img):
     # plot data
     fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
     fig.suptitle('Original and Compressed Images')
-    ax[0][0].imshow(img)
-    ax[0][1].imshow(compression_15)
-    ax[0][2].imshow(compression_30)
-    ax[1][0].imshow(compression_50)
-    ax[1][1].imshow(compression_70)
-    ax[1][2].imshow(compression_95)
+    ax[0][0].imshow(img, cmap='gray')
+    ax[0][1].imshow(compression_15, cmap='gray')
+    ax[0][2].imshow(compression_30, cmap='gray')
+    ax[1][0].imshow(compression_50, cmap='gray')
+    ax[1][1].imshow(compression_70, cmap='gray')
+    ax[1][2].imshow(compression_95, cmap='gray')
     plt.show()
     print("Number of total fourier coefficients in original image: {}".format(R * C))
     print("Number of nonzero Fourier coefficients in image 1: {}".format(R * C * (1 - .15)))
@@ -396,20 +407,32 @@ def fourth_mode():
     :return:
     """
     try:
-        y_axis = [32, 64]
+        y_axis = [32, 64, 128, 256, 512, 1024]
         fft_points = []
+        fft_std = []
+
         naive_points = []
+        naive_std = []
+
+        # see report to see why these points are used.
+        naive_points_estimations = [28548, 879947878, 8.36005472344308e+17, 7.545942018890406e+35]
+        naive_std_estimations = [0, 0, 0, 0]
         with open("runtime_data_fft.csv") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             for row in reader:
                 fft_points.append(float(row[0]))
+                fft_std.append(2*float(row[1]))
         with open("runtime_data_naive.csv") as csvfile:
             reader = csv.reader(csvfile, delimiter=",")
             for row in reader:
                 naive_points.append(float(row[0]))
+                naive_std.append(2*float(row[1]))
+            naive_points += naive_points_estimations
+            naive_std += naive_std_estimations
 
-        plt.plot(y_axis, fft_points, label="FFT")
-        plt.plot(y_axis, naive_points, label="Naive DFT")
+        plt.errorbar(y_axis, fft_points,yerr = fft_std, label="FFT")
+        # remove the line below to see the unskewed FFT runtime graph.
+        plt.errorbar(y_axis, naive_points, yerr = naive_std, label="Naive DFT")
         plt.xlabel('Size of rows and columns of input matrix')
         plt.ylabel('Mean runtime for 10 experiments (seconds)')
         plt.title('Runtime Stats Plot')

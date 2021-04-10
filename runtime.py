@@ -3,7 +3,7 @@ This file will be used to calculate the runtime complexity of FFT and Naive DFT.
 
 It will store results in a file so that we do not have to run the experiments everytime.
 """
-from fft import naive_2d_dft, fft_2d_dft
+from fft import naive_2d_dft, fft_2d
 import numpy as np
 import time
 
@@ -15,7 +15,7 @@ def generate_data():
     It will save the data in two csv files. One for naive and one for FFT
     """
 
-    sizes = [32, 64]
+    sizes = [32, 64, 128, 256, 512, 1024]
     data_naive = []
     data_fft = []
     for size in sizes:
@@ -54,7 +54,7 @@ def runtime_calculation(size, num_runs):
 
         print("FFT round: {}, size: {}".format(i, size))
         start_fft = time.time()
-        fft_2d_dft(random_2d_array)
+        fft_2d(random_2d_array)
         end_fft = time.time()
 
         data_naive.append(end_naive - start_naive)
